@@ -28,6 +28,8 @@ function AppContent() {
 	const [topScorers, setTopScorers] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const [selectedLeague, setSelectedLeague] = useState('39'); // Premier League by default
 
 	useEffect(() => {
 		const fetchDashboardData = async () => {
@@ -49,9 +51,9 @@ function AppContent() {
 					}
 				);
 
-				// Fetch top scorers (using Premier League as example)
+				// Fetch top scorers (using selected league)
 				const scorersResponse = await fetch(
-					"https://v3.football.api-sports.io/players/topscorers?league=39&season=2023",
+					`https://v3.football.api-sports.io/players/topscorers?league=${selectedLeague}&season=2023`,
 					{
 						method: "GET",
 						headers: {
@@ -86,7 +88,16 @@ function AppContent() {
 		};
 
 		fetchDashboardData();
-	}, []);
+	}, [selectedLeague]);
+
+	// League options for the dropdown
+	const leagues = [
+		{ id: '39', name: 'Premier League' },
+		{ id: '140', name: 'La Liga' },
+		{ id: '135', name: 'Serie A' },
+		{ id: '78', name: 'Bundesliga' },
+		{ id: '61', name: 'Ligue 1' },
+	];
 
 	if (loading) {
 		return (
@@ -107,47 +118,111 @@ function AppContent() {
 	return (
 		<div className="min-h-screen bg-gray-100">
 			<nav className="bg-blue-800 text-white shadow-lg">
-				<div className="container mx-auto px-4 py-3 flex items-center justify-between">
-					<h1 className="text-2xl font-bold">SSport Analytics</h1>
-					<div className="flex items-center space-x-4">
-						<Link to="/" className="hover:text-blue-200">
-							Dashboard
-						</Link>
-						<Link to="/analytics" className="hover:text-blue-200">
-							Analytics
-						</Link>
-						<Link to="/predictions" className="hover:text-blue-200">
-							Predictions
-						</Link>
-						<Link to="/Leagues" className="hover:text-blue-200">
-							Leagues
-						</Link>
-						{!user ? (
-							<>
-								<Link
-									to="/login"
-									className="hover:text-blue-200">
-									Login
-								</Link>
-								<Link
-									to="/register"
-									className="hover:text-blue-200">
-									Register
-								</Link>
-							</>
-						) : (
-							<div className="flex items-center space-x-4">
-								<span className="text-sm text-blue-200">
-									{user.email}
-								</span>
-								<button
-									onClick={() => signOut()}
-									className="hover:text-blue-200">
-									Sign Out
-								</button>
-							</div>
-						)}
+				<div className="container mx-auto px-4 py-3">
+					<div className="flex items-center justify-between">
+						<h1 className="text-2xl font-bold">SSport Analytics</h1>
+						
+						{/* Mobile menu button */}
+						<div className="md:hidden">
+							<button 
+								onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+								className="text-white focus:outline-none"
+								aria-label="Toggle menu"
+							>
+								<svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									{mobileMenuOpen ? (
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+									) : (
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+									)}
+								</svg>
+							</button>
+						</div>
+						
+						{/* Desktop menu */}
+						<div className="hidden md:flex items-center space-x-4">
+							<Link to="/" className="hover:text-blue-200">
+								Dashboard
+							</Link>
+							<Link to="/analytics" className="hover:text-blue-200">
+								Analytics
+							</Link>
+							<Link to="/predictions" className="hover:text-blue-200">
+								Predictions
+							</Link>
+							<Link to="/Leagues" className="hover:text-blue-200">
+								Leagues
+							</Link>
+							{!user ? (
+								<>
+									<Link
+										to="/login"
+										className="hover:text-blue-200">
+										Login
+									</Link>
+									<Link
+										to="/register"
+										className="hover:text-blue-200">
+										Register
+									</Link>
+								</>
+							) : (
+								<div className="flex items-center space-x-4">
+									<span className="text-sm text-blue-200">
+										{user.email}
+									</span>
+									<button
+										onClick={() => signOut()}
+										className="hover:text-blue-200">
+										Sign Out
+									</button>
+								</div>
+							)}
+						</div>
 					</div>
+					
+					{/* Mobile menu */}
+					{mobileMenuOpen && (
+						<div className="md:hidden mt-4 pb-3 space-y-3">
+							<Link to="/" className="block hover:text-blue-200 py-2">
+								Dashboard
+							</Link>
+							<Link to="/analytics" className="block hover:text-blue-200 py-2">
+								Analytics
+							</Link>
+							<Link to="/predictions" className="block hover:text-blue-200 py-2">
+								Predictions
+							</Link>
+							<Link to="/Leagues" className="block hover:text-blue-200 py-2">
+								Leagues
+							</Link>
+							{!user ? (
+								<>
+									<Link
+										to="/login"
+										className="block hover:text-blue-200 py-2">
+										Login
+									</Link>
+									<Link
+										to="/register"
+										className="block hover:text-blue-200 py-2">
+										Register
+									</Link>
+								</>
+							) : (
+								<div className="space-y-2">
+									<span className="block text-sm text-blue-200">
+										{user.email}
+									</span>
+									<button
+										onClick={() => signOut()}
+										className="block hover:text-blue-200 py-2">
+										Sign Out
+									</button>
+								</div>
+							)}
+						</div>
+					)}
 				</div>
 			</nav>
 
@@ -176,6 +251,16 @@ function MainContent() {
 	const [topScorers, setTopScorers] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [selectedLeague, setSelectedLeague] = useState('39'); // Premier League by default
+
+	// League options for the dropdown
+	const leagues = [
+		{ id: '39', name: 'Premier League' },
+		{ id: '140', name: 'La Liga' },
+		{ id: '135', name: 'Serie A' },
+		{ id: '78', name: 'Bundesliga' },
+		{ id: '61', name: 'Ligue 1' },
+	];
 
 	useEffect(() => {
 		const fetchDashboardData = async () => {
@@ -197,9 +282,9 @@ function MainContent() {
 					}
 				);
 
-				// Fetch top scorers (using Premier League as example)
+				// Fetch top scorers (using selected league)
 				const scorersResponse = await fetch(
-					"https://v3.football.api-sports.io/players/topscorers?league=39&season=2023",
+					`https://v3.football.api-sports.io/players/topscorers?league=${selectedLeague}&season=2023`,
 					{
 						method: "GET",
 						headers: {
@@ -234,7 +319,7 @@ function MainContent() {
 		};
 
 		fetchDashboardData();
-	}, []);
+	}, [selectedLeague]);
 
 	if (loading) {
 		return (
@@ -377,7 +462,20 @@ function MainContent() {
 
 			{/* Top Scorers Section */}
 			<section className="mb-12">
-				<h3 className="text-2xl font-bold mb-6">Top Scorers</h3>
+				<div className="flex justify-between items-center mb-6">
+					<h3 className="text-2xl font-bold">Top Scorers</h3>
+					<select
+						value={selectedLeague}
+						onChange={(e) => setSelectedLeague(e.target.value)}
+						className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+					>
+						{leagues.map((league) => (
+							<option key={league.id} value={league.id}>
+								{league.name}
+							</option>
+						))}
+					</select>
+				</div>
 				<div className="bg-white rounded-lg shadow-md p-6">
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{topScorers.map((scorer) => (

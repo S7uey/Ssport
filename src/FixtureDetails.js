@@ -164,7 +164,7 @@ const FixtureDetails = () => {
 							{fixture.teams.home.name}
 						</h2>
 					</div>
-					<div className="text-center">
+					<div className="text-center flex flex-col justify-center items-center h-full">
 						<div className="text-3xl font-bold">
 							{isMatchFinished
 								? `${fixture.goals.home} - ${fixture.goals.away}`

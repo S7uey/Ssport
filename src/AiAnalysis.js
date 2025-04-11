@@ -21,20 +21,35 @@ const AIAnalysis = ({ data, type }) => {
 
 			let prompt = "";
 			if (type === "player") {
-				prompt = `Analyze this football player's statistics and provide insights: ${JSON.stringify(
-					data
-				)}. Include:
+				const limitedData = {
+					name: data.name,
+					position: data.position,
+					stats: data.stats ? {
+						appearances: data.stats.appearances,
+						goals: data.stats.goals,
+						assists: data.stats.assists,
+						minutesPlayed: data.stats.minutesPlayed
+					} : null
+				};
+				
+				prompt = `Analyze this player's stats: ${JSON.stringify(limitedData)}. Include:
                 1. Performance overview
                 2. Key strengths
                 3. Areas for improvement
                 4. Comparison to similar players
                 5. Future predictions`;
 			} else if (type === "fixture") {
-				prompt = `Analyze this football match data and provide insights: ${JSON.stringify(
-					data
-				)}. Include:
+				const limitedData = {
+					homeTeam: data.homeTeam,
+					awayTeam: data.awayTeam,
+					date: data.date,
+					venue: data.venue,
+					league: data.league
+				};
+				
+				prompt = `Analyze this match data: ${JSON.stringify(limitedData)}. Include:
                 1. Match prediction
-                2. Key factors affecting the outcome
+                2. Key factors affecting outcome
                 3. Team form analysis
                 4. Key player matchups
                 5. Historical context`;
@@ -59,7 +74,7 @@ const AIAnalysis = ({ data, type }) => {
 							{ role: "user", content: prompt },
 						],
 						temperature: 0.7,
-						max_tokens: 1000,
+						max_tokens: 300,
 					}),
 				}
 			);
