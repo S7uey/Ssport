@@ -9,6 +9,7 @@ import Login from "./Login";
 import PlayerDetails from "./PlayerDetails";
 import Predictions from "./Predictions";
 import Register from "./Register";
+import Analytics from "./Analytics";
 
 function App() {
 	return (
@@ -156,7 +157,7 @@ function AppContent() {
 				<Route path="/register" element={<Register />} />
 				<Route path="/Leagues" element={<Leagues />} />
 				<Route path="/league/:id" element={<LeagueMatches />} />
-				<Route path="/analytics" element={<div>Analytics Page</div>} />
+				<Route path="/analytics" element={<Analytics />} />
 				<Route path="/predictions" element={<Predictions />} />
 				<Route
 					path="/fixture/:fixtureId"

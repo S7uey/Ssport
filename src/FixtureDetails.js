@@ -30,6 +30,32 @@ const FixtureDetails = () => {
 				const fixtureDetails = fixtureData.response[0];
 				setFixture(fixtureDetails);
 
+				// Fetch match statistics if match is finished
+				if (fixtureDetails.fixture.status.short === "FT") {
+					const statisticsResponse = await fetch(
+						`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}&half=true`,
+						{
+							method: "GET",
+							headers: {
+								"x-rapidapi-host": "v3.football.api-sports.io",
+								"x-rapidapi-key":
+									"3e35192ee89b4d9324a60a8a2907218b",
+							},
+						}
+					);
+					const statisticsData = await statisticsResponse.json();
+					console.log("Statistics API Response:", statisticsData);
+					
+					if (statisticsData.response && statisticsData.response.length > 0) {
+						// Update fixture with statistics data
+						fixtureDetails.statistics = statisticsData.response;
+						console.log("Statistics data added to fixture:", fixtureDetails.statistics);
+						setFixture({...fixtureDetails});
+					} else {
+						console.log("No statistics data available in the response");
+					}
+				}
+
 				// Fetch predictions if match hasn't started
 				if (fixtureDetails.fixture.status.short !== "FT") {
 					const predictionsResponse = await fetch(
@@ -170,47 +196,62 @@ const FixtureDetails = () => {
 			{isMatchFinished ? (
 				<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
 					<h3 className="text-xl font-bold mb-4">Match Statistics</h3>
-					<div className="grid grid-cols-3 gap-4">
-						<div className="text-right">
-							{fixture.statistics?.[0]?.statistics?.[
-								"Ball Possession"
-							] || "0%"}
+					{fixture.statistics && fixture.statistics.length > 0 ? (
+						<div className="grid grid-cols-3 gap-4">
+							{console.log("Rendering statistics:", fixture.statistics)}
+							
+							{/* Helper function to get statistic value */}
+							{(() => {
+								const getStatValue = (teamIndex, statType) => {
+									if (!fixture.statistics[teamIndex] || !fixture.statistics[teamIndex].statistics) return "0";
+									const stat = fixture.statistics[teamIndex].statistics.find(s => s.type === statType);
+									return stat ? stat.value : "0";
+								};
+								
+								// Define all statistics to display
+								const statsToShow = [
+									{ type: "Ball Possession", label: "Possession" },
+									{ type: "Total Shots", label: "Total Shots" },
+									{ type: "Shots on Goal", label: "Shots on Goal" },
+									{ type: "Shots off Goal", label: "Shots off Goal" },
+									{ type: "Shots insidebox", label: "Shots Inside Box" },
+									{ type: "Shots outsidebox", label: "Shots Outside Box" },
+									{ type: "Blocked Shots", label: "Blocked Shots" },
+									{ type: "Total passes", label: "Total Passes" },
+									{ type: "Passes accurate", label: "Accurate Passes" },
+									{ type: "Passes %", label: "Pass Accuracy" },
+									{ type: "Fouls", label: "Fouls" },
+									{ type: "Yellow Cards", label: "Yellow Cards" },
+									{ type: "Red Cards", label: "Red Cards" },
+									{ type: "Goalkeeper Saves", label: "Goalkeeper Saves" },
+									{ type: "Corner Kicks", label: "Corner Kicks" },
+									{ type: "Offsides", label: "Offsides" }
+								];
+								
+								return (
+									<>
+										{statsToShow.map((stat, index) => (
+											<React.Fragment key={index}>
+												<div className="text-right">
+													{getStatValue(0, stat.type)}
+												</div>
+												<div className="text-center font-semibold">
+													{stat.label}
+												</div>
+												<div className="text-left">
+													{getStatValue(1, stat.type)}
+												</div>
+											</React.Fragment>
+										))}
+									</>
+								);
+							})()}
 						</div>
-						<div className="text-center font-semibold">
-							Possession
+					) : (
+						<div className="text-center text-gray-500 py-4">
+							Statistics not available for this match
 						</div>
-						<div className="text-left">
-							{fixture.statistics?.[1]?.statistics?.[
-								"Ball Possession"
-							] || "0%"}
-						</div>
-
-						<div className="text-right">
-							{fixture.statistics?.[0]?.statistics?.[
-								"Total Shots"
-							] || 0}
-						</div>
-						<div className="text-center font-semibold">Shots</div>
-						<div className="text-left">
-							{fixture.statistics?.[1]?.statistics?.[
-								"Total Shots"
-							] || 0}
-						</div>
-
-						<div className="text-right">
-							{fixture.statistics?.[0]?.statistics?.[
-								"Shots on Goal"
-							] || 0}
-						</div>
-						<div className="text-center font-semibold">
-							Shots on Target
-						</div>
-						<div className="text-left">
-							{fixture.statistics?.[1]?.statistics?.[
-								"Shots on Goal"
-							] || 0}
-						</div>
-					</div>
+					)}
 				</div>
 			) : (
 				predictions && (
