@@ -34,7 +34,7 @@ function Analytics() {
       try {
         setLoading(true);
         const response = await fetch(
-          `https://v3.football.api-sports.io/teams?league=${selectedLeague}&season=2023`,
+          `https://v3.football.api-sports.io/teams?league=${selectedLeague}&season=2024`,
           {
             method: "GET",
             headers: {
@@ -65,7 +65,7 @@ function Analytics() {
       try {
         setLoading(true);
         const response = await fetch(
-          `https://v3.football.api-sports.io/teams/statistics?league=${selectedLeague}&season=2023&team=${selectedTeam}`,
+          `https://v3.football.api-sports.io/teams/statistics?league=${selectedLeague}&season=2024&team=${selectedTeam}`,
           {
             method: "GET",
             headers: {

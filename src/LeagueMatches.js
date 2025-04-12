@@ -4,14 +4,16 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 function LeagueMatches() {
 	const { id } = useParams();
 	const [searchParams] = useSearchParams();
-	const season = searchParams.get("season") || "2023";
-	const [matches, setMatches] = useState(null);
+	const season = searchParams.get("season") || "2024";
+	const [matches, setMatches] = useState([]);
 	const [rounds, setRounds] = useState([]);
 	const [selectedRound, setSelectedRound] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [leagueInfo, setLeagueInfo] = useState(null);
 
 	useEffect(() => {
+		fetchLeagueInfo();
 		fetchRounds();
 	}, [id]);
 
@@ -20,6 +22,32 @@ function LeagueMatches() {
 			fetchMatches();
 		}
 	}, [selectedRound]);
+
+	const fetchLeagueInfo = async () => {
+		try {
+			const response = await fetch(
+				`https://v3.football.api-sports.io/leagues?id=${id}`,
+				{
+					method: "GET",
+					headers: {
+						"x-rapidapi-host": "v3.football.api-sports.io",
+						"x-rapidapi-key": "3e35192ee89b4d9324a60a8a2907218b",
+					},
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Network response was not ok");
+			}
+
+			const data = await response.json();
+			if (data.response && data.response.length > 0) {
+				setLeagueInfo(data.response[0]);
+			}
+		} catch (err) {
+			console.error("Error fetching league info:", err);
+		}
+	};
 
 	const fetchRounds = async () => {
 		try {
@@ -42,7 +70,12 @@ function LeagueMatches() {
 			// Extract unique rounds from the response
 			const uniqueRounds = [
 				...new Set(data.response.map((match) => match.league.round)),
-			];
+			].sort((a, b) => {
+				// Extract numbers from round strings (e.g., "Regular Season - 1" -> 1)
+				const numA = parseInt(a.match(/\d+/)?.[0] || "0");
+				const numB = parseInt(b.match(/\d+/)?.[0] || "0");
+				return numA - numB;
+			});
 			setRounds(uniqueRounds);
 			setSelectedRound(uniqueRounds[0]); // Select first round by default
 			setLoading(false);
@@ -71,7 +104,7 @@ function LeagueMatches() {
 			}
 
 			const data = await response.json();
-			setMatches(data.response); // Store only the response array
+			setMatches(data.response);
 			setLoading(false);
 		} catch (err) {
 			setError(err.message);
@@ -102,18 +135,38 @@ function LeagueMatches() {
 	return (
 		<div className="container mx-auto px-4 py-8">
 			<Link
-				to="/"
+				to="/leagues"
 				className="inline-block mb-6 text-blue-600 hover:text-blue-800">
 				← Back to Leagues
 			</Link>
 
-			<h1 className="text-3xl font-bold mb-6">League Matches</h1>
+			{leagueInfo && (
+				<div className="flex items-center gap-4 mb-6">
+					<img
+						src={leagueInfo.league.logo}
+						alt={leagueInfo.league.name}
+						className="w-16 h-16 object-contain"
+					/>
+					<div>
+						<h1 className="text-3xl font-bold">{leagueInfo.league.name}</h1>
+						<div className="flex items-center gap-2">
+							<img
+								src={leagueInfo.country.flag}
+								alt={leagueInfo.country.name}
+								className="w-6 h-4"
+							/>
+							<p className="text-gray-600">{leagueInfo.country.name}</p>
+						</div>
+					</div>
+				</div>
+			)}
 
 			<div className="mb-6">
 				<select
-					value={selectedRound || ""}
+					value={selectedRound}
 					onChange={(e) => setSelectedRound(e.target.value)}
-					className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+					className="block w-full md:w-64 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+				>
 					{rounds.map((round) => (
 						<option key={round} value={round}>
 							{round}
@@ -122,12 +175,13 @@ function LeagueMatches() {
 				</select>
 			</div>
 
-			<div className="grid gap-4">
-				{matches?.map((match) => (
+			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				{matches.map((match) => (
 					<div
 						key={match.fixture.id}
-						className="bg-white rounded-lg shadow-md p-4">
-						<div className="flex items-center justify-between">
+						className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200"
+					>
+						<div className="flex justify-between items-center mb-4">
 							<div className="flex items-center gap-2">
 								<img
 									src={match.teams.home.logo}
@@ -138,14 +192,7 @@ function LeagueMatches() {
 									{match.teams.home.name}
 								</span>
 							</div>
-
-							<div className="flex items-center gap-2">
-								<span className="font-bold">
-									{match.goals.home ?? "-"} -{" "}
-									{match.goals.away ?? "-"}
-								</span>
-							</div>
-
+							<div className="text-lg font-bold">VS</div>
 							<div className="flex items-center gap-2">
 								<span className="font-medium">
 									{match.teams.away.name}
@@ -158,19 +205,15 @@ function LeagueMatches() {
 							</div>
 						</div>
 
-						<div className="mt-2 flex justify-between items-center">
-							<div className="text-sm text-gray-600">
-								{new Date(
-									match.fixture.date
-								).toLocaleDateString()}{" "}
-								- {match.fixture.status.long}
-							</div>
-							<Link
-								to={`/predictions?fixture=${match.fixture.id}`}
-								className="text-blue-600 hover:text-blue-800 text-sm">
-								View Predictions
-							</Link>
+						<div className="text-sm text-gray-600">
+							{new Date(match.fixture.date).toLocaleDateString()}{" "}
+							- {match.fixture.status.long}
 						</div>
+						<Link
+							to={`/predictions?fixture=${match.fixture.id}`}
+							className="text-blue-600 hover:text-blue-800 text-sm">
+							View Predictions
+						</Link>
 					</div>
 				))}
 			</div>

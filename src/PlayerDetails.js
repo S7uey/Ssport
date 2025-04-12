@@ -12,7 +12,7 @@ const PlayerDetails = () => {
 		const fetchPlayerStats = async () => {
 			try {
 				const response = await fetch(
-					`https://v3.football.api-sports.io/players?id=${playerId}&season=2023`,
+					`https://v3.football.api-sports.io/players?id=${playerId}&season=2024`,
 					{
 						method: "GET",
 						headers: {
