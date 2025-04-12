@@ -153,106 +153,79 @@ function Dashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Recent Matches */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h4 className="text-lg font-semibold mb-4">
-              Recent Results
-            </h4>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-2xl font-bold mb-4">Recent Matches</h2>
             <div className="space-y-4">
               {recentMatches.map((match) => (
-                <Link
-                  to={`/fixture/${match.fixture.id}`}
+                <div
                   key={match.fixture.id}
-                  className="block hover:bg-gray-50 rounded-lg p-3 transition-colors">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                      <img
-                        src={match.teams.home.logo}
-                        alt={match.teams.home.name}
-                        className="w-6 h-6"
-                      />
-                      <span
-                        className={
-                          match.teams.home.winner
-                            ? "font-bold"
-                            : ""
-                        }>
-                        {match.teams.home.name}
-                      </span>
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={match.teams.home.logo}
+                      alt={match.teams.home.name}
+                      className="w-8 h-8"
+                    />
+                    <span className="font-medium">{match.teams.home.name}</span>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-bold">
+                      {match.goals.home} - {match.goals.away}
                     </div>
-                    <span className="font-bold">
-                      {match.goals.home} -{" "}
-                      {match.goals.away}
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <span
-                        className={
-                          match.teams.away.winner
-                            ? "font-bold"
-                            : ""
-                        }>
-                        {match.teams.away.name}
-                      </span>
-                      <img
-                        src={match.teams.away.logo}
-                        alt={match.teams.away.name}
-                        className="w-6 h-6"
-                      />
+                    <div className="text-sm text-gray-600">
+                      {new Date(match.fixture.date).toLocaleDateString()}
                     </div>
                   </div>
-                </Link>
+                  <div className="flex items-center space-x-4">
+                    <span className="font-medium">{match.teams.away.name}</span>
+                    <img
+                      src={match.teams.away.logo}
+                      alt={match.teams.away.name}
+                      className="w-8 h-8"
+                    />
+                  </div>
+                </div>
               ))}
-              {recentMatches.length === 0 && (
-                <p className="text-gray-500 text-center">
-                  No completed matches today
-                </p>
-              )}
             </div>
           </div>
 
           {/* Upcoming Matches */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h4 className="text-lg font-semibold mb-4">
-              Upcoming Matches
-            </h4>
+            <h2 className="text-2xl font-bold mb-4">Upcoming Matches</h2>
             <div className="space-y-4">
               {upcomingMatches.map((match) => (
-                <Link
-                  to={`/fixture/${match.fixture.id}`}
+                <div
                   key={match.fixture.id}
-                  className="block hover:bg-gray-50 rounded-lg p-3 transition-colors">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                      <img
-                        src={match.teams.home.logo}
-                        alt={match.teams.home.name}
-                        className="w-6 h-6"
-                      />
-                      <span>{match.teams.home.name}</span>
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={match.teams.home.logo}
+                      alt={match.teams.home.name}
+                      className="w-8 h-8"
+                    />
+                    <span className="font-medium">{match.teams.home.name}</span>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600">
+                      {new Date(match.fixture.date).toLocaleDateString()}
                     </div>
-                    <span className="text-sm text-gray-600">
-                      {new Date(
-                        match.fixture.date
-                      ).toLocaleTimeString([], {
+                    <div className="text-sm text-gray-600">
+                      {new Date(match.fixture.date).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <span>{match.teams.away.name}</span>
-                      <img
-                        src={match.teams.away.logo}
-                        alt={match.teams.away.name}
-                        className="w-6 h-6"
-                      />
                     </div>
                   </div>
-                </Link>
+                  <div className="flex items-center space-x-4">
+                    <span className="font-medium">{match.teams.away.name}</span>
+                    <img
+                      src={match.teams.away.logo}
+                      alt={match.teams.away.name}
+                      className="w-8 h-8"
+                    />
+                  </div>
+                </div>
               ))}
-              {upcomingMatches.length === 0 && (
-                <p className="text-gray-500 text-center">
-                  No upcoming matches today
-                </p>
-              )}
             </div>
           </div>
         </div>
