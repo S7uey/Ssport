@@ -204,7 +204,9 @@ const Predictions = () => {
 
 	return (
 		<div className="container mx-auto p-4">
-			<h2 className="text-2xl font-bold mb-4">Match Prediction</h2>
+			<h2 className="text-2xl font-bold mb-4">
+				{match.fixture.status.short === "FT" ? "Match Result" : "Match Prediction"}
+			</h2>
 			
 			{/* Match Details */}
 			<div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -220,17 +222,28 @@ const Predictions = () => {
 						</span>
 					</div>
 					<div className="text-center">
-						<div className="text-lg font-medium">
-							{new Date(match.fixture.date).toLocaleDateString()}
-						</div>
-						<div className="text-lg font-medium">
-							{new Date(match.fixture.date).toLocaleTimeString([], {
-								hour: "2-digit",
-								minute: "2-digit",
-							})}
-						</div>
+						{match.fixture.status.short === "FT" ? (
+							<div className="text-3xl font-bold">
+								{match.goals.home} - {match.goals.away}
+							</div>
+						) : (
+							<>
+								<div className="text-lg font-medium">
+									{new Date(match.fixture.date).toLocaleDateString()}
+								</div>
+								<div className="text-lg font-medium">
+									{new Date(match.fixture.date).toLocaleTimeString([], {
+										hour: "2-digit",
+										minute: "2-digit",
+									})}
+								</div>
+							</>
+						)}
 						<div className="text-sm text-gray-600 mt-1">
 							{match.league.name}
+						</div>
+						<div className="text-sm text-gray-600">
+							{match.fixture.status.long}
 						</div>
 					</div>
 					<div className="flex items-center space-x-4">
@@ -246,144 +259,75 @@ const Predictions = () => {
 				</div>
 			</div>
 
-			{/* Match Prediction */}
-			{match.predictions ? (
+			{/* Match Prediction - Only show for upcoming matches */}
+			{match.fixture.status.short !== "FT" && match.predictions && (
 				<div className="bg-white rounded-lg shadow-md p-6 mb-6">
-					<h3 className="text-xl font-semibold mb-4">Match Prediction</h3>
+					<h3 className="text-xl font-semibold mb-4">Prediction</h3>
 					<div className="space-y-4">
-						<div className="p-4 bg-blue-50 rounded-lg">
-							<div className="font-medium mb-2">Predicted Winner</div>
-							<div className="text-blue-700 text-lg">
-								{match.predictions.predictions.winner.name}
-							</div>
+						<div>
+							<p className="text-gray-600">Predicted Winner:</p>
+							<p className="font-medium">{match.predictions.predictions.winner.name}</p>
 						</div>
-						
-						<div className="p-4 bg-gray-50 rounded-lg">
-							<div className="font-medium mb-2">Betting Advice</div>
-							<div className="text-gray-700">
-								{match.predictions.predictions.advice}
-							</div>
+						<div>
+							<p className="text-gray-600">Betting Advice:</p>
+							<p className="font-medium">{match.predictions.predictions.advice}</p>
 						</div>
-						
-						<div className="mt-6">
-							<h4 className="font-medium mb-4 text-lg">Win Probability</h4>
-							<div className="space-y-4">
+						<div>
+							<p className="text-gray-600">Win Probabilities:</p>
+							<div className="grid grid-cols-3 gap-4 mt-2">
 								<div>
-									<div className="flex justify-between mb-1">
-										<span className="font-medium">Home</span>
-										<span>{match.predictions.predictions.percent.home}</span>
-									</div>
-									<div className="w-full bg-gray-200 rounded-full h-3">
-										<div
-											className="bg-blue-600 h-3 rounded-full"
-											style={{
-												width: match.predictions.predictions.percent.home,
-											}}></div>
-									</div>
+									<p className="text-sm text-gray-500">Home Win</p>
+									<p className="font-medium">{match.predictions.predictions.percent.home}%</p>
 								</div>
 								<div>
-									<div className="flex justify-between mb-1">
-										<span className="font-medium">Draw</span>
-										<span>{match.predictions.predictions.percent.draw}</span>
-									</div>
-									<div className="w-full bg-gray-200 rounded-full h-3">
-										<div
-											className="bg-gray-600 h-3 rounded-full"
-											style={{
-												width: match.predictions.predictions.percent.draw,
-											}}></div>
-									</div>
+									<p className="text-sm text-gray-500">Draw</p>
+									<p className="font-medium">{match.predictions.predictions.percent.draw}%</p>
 								</div>
 								<div>
-									<div className="flex justify-between mb-1">
-										<span className="font-medium">Away</span>
-										<span>{match.predictions.predictions.percent.away}</span>
-									</div>
-									<div className="w-full bg-gray-200 rounded-full h-3">
-										<div
-											className="bg-green-600 h-3 rounded-full"
-											style={{
-												width: match.predictions.predictions.percent.away,
-											}}></div>
-									</div>
+									<p className="text-sm text-gray-500">Away Win</p>
+									<p className="font-medium">{match.predictions.predictions.percent.away}%</p>
 								</div>
 							</div>
 						</div>
-						
-						{match.predictions.predictions.goals && (
-							<div className="mt-6">
-								<h4 className="font-medium mb-4 text-lg">Expected Goals</h4>
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-									<div className="p-4 bg-gray-50 rounded-lg text-center">
-										<div className="text-sm text-gray-600">Home</div>
-										<div className="text-xl font-semibold">
-											{match.predictions.predictions.goals.home}
-										</div>
-									</div>
-									<div className="p-4 bg-gray-50 rounded-lg text-center">
-										<div className="text-sm text-gray-600">Total</div>
-										<div className="text-xl font-semibold">
-											{match.predictions.predictions.goals.total}
-										</div>
-									</div>
-									<div className="p-4 bg-gray-50 rounded-lg text-center">
-										<div className="text-sm text-gray-600">Away</div>
-										<div className="text-xl font-semibold">
-											{match.predictions.predictions.goals.away}
-										</div>
-									</div>
-								</div>
-							</div>
-						)}
 					</div>
 				</div>
-			) : (
-				<div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center text-gray-500">
-					No prediction available for this match
-				</div>
 			)}
-			
-			{/* AI Analysis Section */}
-			<div className="bg-white rounded-lg shadow-md p-6">
-				<div className="flex items-center justify-between mb-4">
-					<h3 className="text-xl font-semibold">AI Analysis</h3>
-					{aiLoading && (
-						<div className="flex items-center">
-							<div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-800 mr-2"></div>
-							<span className="text-sm text-gray-600">Analyzing...</span>
+
+			{/* AI Analysis - Only show for upcoming matches */}
+			{match.fixture.status.short !== "FT" && aiAnalysis && !aiLoading && (
+				<div className="bg-white rounded-lg shadow-md p-6">
+					<h3 className="text-xl font-semibold mb-4">AI Analysis</h3>
+					{aiLoading ? (
+						<div className="flex justify-center items-center py-4">
+							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800"></div>
+						</div>
+					) : (
+						<div className="space-y-6">
+							<div>
+								<h4 className="font-medium text-lg mb-2">Summary</h4>
+								<p className="text-gray-700">{aiAnalysis.summary}</p>
+							</div>
+							
+							<div>
+								<h4 className="font-medium text-lg mb-2">Key Factors</h4>
+								<ul className="list-disc list-inside space-y-1">
+									{aiAnalysis.keyFactors.map((factor, index) => (
+										<li key={index} className="text-gray-700">{factor}</li>
+									))}
+								</ul>
+							</div>
+							
+							<div>
+								<h4 className="font-medium text-lg mb-2">Recommendation</h4>
+								<p className="text-gray-700">{aiAnalysis.recommendation}</p>
+							</div>
 						</div>
 					)}
 				</div>
-				
-				{aiAnalysis ? (
-					<div className="space-y-6">
-						<div>
-							<h4 className="font-medium text-lg mb-2">Summary</h4>
-							<p className="text-gray-700">{aiAnalysis.summary}</p>
-						</div>
-						
-						<div>
-							<h4 className="font-medium text-lg mb-2">Key Factors</h4>
-							<ul className="list-disc pl-5 space-y-1">
-								{aiAnalysis.keyFactors.map((factor, index) => (
-									<li key={index} className="text-gray-700">{factor}</li>
-								))}
-							</ul>
-						</div>
-						
-						<div>
-							<h4 className="font-medium text-lg mb-2">Recommendation</h4>
-							<p className="text-gray-700">{aiAnalysis.recommendation}</p>
-						</div>
-					</div>
-				) : (
-					<div className="text-center py-4 text-gray-500">
-						{aiLoading ? "Generating AI analysis..." : "No AI analysis available"}
-					</div>
-				)}
-			</div>
+			)}
 		</div>
 	);
 };
 
 export default Predictions;
+
