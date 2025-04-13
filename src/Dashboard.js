@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import LiveMatchStats from "./LiveMatchStats";
 
 function Dashboard() {
+  // State variables for managing matches, scorers, and UI state
   const [recentMatches, setRecentMatches] = useState([]);
   const [upcomingMatches, setUpcomingMatches] = useState([]);
   const [topScorers, setTopScorers] = useState([]);
@@ -9,6 +11,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLeague, setSelectedLeague] = useState('39'); // Premier League by default
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
 
   // League options for the dropdown
   const leagues = [
@@ -19,6 +22,7 @@ function Dashboard() {
     { id: '61', name: 'Ligue 1' },
   ];
 
+  // Fetch data when component mounts or selected league changes
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -44,22 +48,26 @@ function Dashboard() {
         const fixturesData = await fixturesResponse.json();
         console.log("Fixtures API Response:", fixturesData);
 
-        // Filter for upcoming matches
-        const today = new Date().toISOString().split("T")[0];
-        const upcomingMatches = fixturesData.response.filter(
-          (match) => match.fixture.date.split("T")[0] > today
+        // Filter for live matches
+        const liveMatches = fixturesData.response.filter(
+          (match) => match.fixture.status.short === "1H" || 
+                     match.fixture.status.short === "2H" || 
+                     match.fixture.status.short === "HT" ||
+                     match.fixture.status.short === "ET" ||
+                     match.fixture.status.short === "P" ||
+                     match.fixture.status.short === "BT"
         ).sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date));
 
         // Filter for recent completed matches
         const recentMatches = fixturesData.response.filter(
-          (match) => match.fixture.date.split("T")[0] <= today && match.fixture.status.short === "FT"
+          (match) => match.fixture.status.short === "FT"
         ).sort((a, b) => new Date(b.fixture.date) - new Date(a.fixture.date));
 
-        console.log("Upcoming matches:", upcomingMatches);
+        console.log("Live matches:", liveMatches);
         console.log("Recent matches:", recentMatches);
         
         setRecentMatches(recentMatches.slice(0, 5)); // Show last 5 completed matches
-        setUpcomingMatches(upcomingMatches.slice(0, 5)); // Show next 5 upcoming matches
+        setUpcomingMatches(liveMatches); // Show live matches instead of upcoming matches
 
         // Fetch top scorers (using selected league)
         const scorersResponse = await fetch(
@@ -101,11 +109,13 @@ function Dashboard() {
     fetchDashboardData();
   }, [selectedLeague]);
 
+  // Handle league selection change
   const handleLeagueChange = (e) => {
     const newLeague = e.target.value;
     setSelectedLeague(newLeague);
   };
 
+  // Loading state UI
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -122,6 +132,7 @@ function Dashboard() {
     );
   }
 
+  // Main dashboard UI
   return (
     <main className="container mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -135,10 +146,9 @@ function Dashboard() {
         </p>
       </section>
 
-      {/* Today's Matches Section */}
+      {/* Matches Section */}
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold">Today's Matches</h3>
           <select
             value={selectedLeague}
             onChange={handleLeagueChange}
@@ -189,14 +199,15 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Upcoming Matches */}
+          {/* Live Matches */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-4">Upcoming Matches</h2>
+            <h2 className="text-2xl font-bold mb-4">Live Matches</h2>
             <div className="space-y-4">
               {upcomingMatches.map((match) => (
                 <div
                   key={match.fixture.id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                  onClick={() => setSelectedMatchId(match.fixture.id)}
+                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
                   <div className="flex items-center space-x-4">
                     <img
                       src={match.teams.home.logo}
@@ -206,14 +217,11 @@ function Dashboard() {
                     <span className="font-medium">{match.teams.home.name}</span>
                   </div>
                   <div className="text-center">
-                    <div className="text-sm text-gray-600">
-                      {new Date(match.fixture.date).toLocaleDateString()}
+                    <div className="font-bold text-green-600">
+                      {match.goals.home} - {match.goals.away}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {new Date(match.fixture.date).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                    <div className="text-sm text-red-600 font-semibold">
+                      {match.fixture.status.elapsed}' {match.fixture.status.short === "HT" ? "HT" : ""}
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -226,6 +234,11 @@ function Dashboard() {
                   </div>
                 </div>
               ))}
+              {upcomingMatches.length === 0 && (
+                <div className="text-center text-gray-500 py-4">
+                  No live matches at the moment
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -327,7 +340,7 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Quick Links */}
+      {/* Quick Links Section */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Link
           to="/leagues"
@@ -358,6 +371,15 @@ function Dashboard() {
           </p>
         </Link>
       </section>
+
+      {/* Live Match Stats Modal */}
+      {selectedMatchId && (
+        <LiveMatchStats
+          matchId={selectedMatchId}
+          onClose={() => setSelectedMatchId(null)}
+          matchData={upcomingMatches.find(match => match.fixture.id === selectedMatchId)}
+        />
+      )}
     </main>
   );
 }

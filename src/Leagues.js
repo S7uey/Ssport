@@ -14,6 +14,7 @@ function Leagues() {
 	const [selectedCountry, setSelectedCountry] = useState('all');
 	const [countries, setCountries] = useState([]);
 	const { user } = useAuth();
+	const [liveMatches, setLiveMatches] = useState([]);
 
 	useEffect(() => {
 		const initializeData = async () => {
@@ -180,6 +181,47 @@ function Leagues() {
 			item.country.name === selectedCountry
 		);
 	};
+
+	// Fetch live matches when a league is selected
+	useEffect(() => {
+		const fetchLiveMatches = async () => {
+			if (!selectedLeague) return;
+
+			try {
+				setLoading(true);
+				setError(null);
+
+				// Fetch live matches for selected league
+				const response = await fetch(
+					`https://v3.football.api-sports.io/fixtures?league=${selectedLeague}&season=2024&live=all`,
+					{
+						method: "GET",
+						headers: {
+							"x-rapidapi-host": "v3.football.api-sports.io",
+							"x-rapidapi-key": "3e35192ee89b4d9324a60a8a2907218b",
+						},
+					}
+				);
+
+				if (!response.ok) {
+					throw new Error("Failed to fetch live matches");
+				}
+
+				const data = await response.json();
+				setLiveMatches(data.response);
+			} catch (err) {
+				console.error("Error fetching live matches:", err);
+				setError(err.message);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchLiveMatches();
+		// Set up interval to refresh live matches every 30 seconds
+		const interval = setInterval(fetchLiveMatches, 30000);
+		return () => clearInterval(interval);
+	}, [selectedLeague]);
 
 	if (loading) {
 		return (
@@ -357,6 +399,49 @@ function Leagues() {
 														)}
 													</div>
 												))}
+											</div>
+										</div>
+
+										{/* Add Live Matches Preview */}
+										<div className="mt-4">
+											<h3 className="font-semibold mb-2">Live Matches</h3>
+											<div className="space-y-2">
+												{liveMatches.slice(0, 3).map((match) => (
+													<div
+														key={match.fixture.id}
+														className="flex justify-between items-center p-2 bg-gray-50 rounded"
+													>
+														<div className="flex items-center space-x-2">
+															<img
+																src={match.teams.home.logo}
+																alt={match.teams.home.name}
+																className="w-6 h-6"
+															/>
+															<span className="text-sm">{match.teams.home.name}</span>
+														</div>
+														<div className="text-center">
+															<div className="text-sm font-bold text-green-600">
+																{match.goals.home} - {match.goals.away}
+															</div>
+															<div className="text-xs text-red-600">
+																{match.fixture.status.elapsed}' {match.fixture.status.short === "HT" ? "HT" : ""}
+															</div>
+														</div>
+														<div className="flex items-center space-x-2">
+															<span className="text-sm">{match.teams.away.name}</span>
+															<img
+																src={match.teams.away.logo}
+																alt={match.teams.away.name}
+																className="w-6 h-6"
+															/>
+														</div>
+													</div>
+												))}
+												{liveMatches.length === 0 && (
+													<p className="text-sm text-gray-500 text-center py-2">
+														No live matches at the moment
+													</p>
+												)}
 											</div>
 										</div>
 									</Link>

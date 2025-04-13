@@ -38,8 +38,8 @@ function NavigationContent() {
 				<div className="container mx-auto px-4">
 					<div className="flex justify-between items-center py-4">
 						<div className="flex items-center">
-							<Link to="/" className="text-xl font-bold">
-								Football Stats
+							<Link to="/" className="text-2xl font-bold">
+								SSport Analytics
 							</Link>
 						</div>
 
