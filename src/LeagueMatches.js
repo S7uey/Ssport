@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import MatchPDF from './MatchPDF';
 
 function LeagueMatches() {
 	const { id } = useParams();
@@ -11,6 +13,7 @@ function LeagueMatches() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [leagueInfo, setLeagueInfo] = useState(null);
+	const [matchStats, setMatchStats] = useState({});
 
 	useEffect(() => {
 		fetchLeagueInfo();
@@ -22,6 +25,14 @@ function LeagueMatches() {
 			fetchMatches();
 		}
 	}, [selectedRound]);
+
+	useEffect(() => {
+		if (matches.length > 0) {
+			matches.forEach(match => {
+				fetchMatchStats(match.fixture.id);
+			});
+		}
+	}, [matches]);
 
 	const fetchLeagueInfo = async () => {
 		try {
@@ -109,6 +120,35 @@ function LeagueMatches() {
 		} catch (err) {
 			setError(err.message);
 			setLoading(false);
+		}
+	};
+
+	const fetchMatchStats = async (fixtureId) => {
+		try {
+			const response = await fetch(
+				`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`,
+				{
+					method: "GET",
+					headers: {
+						"x-rapidapi-host": "v3.football.api-sports.io",
+						"x-rapidapi-key": "3e35192ee89b4d9324a60a8a2907218b",
+					},
+				}
+			);
+
+			if (!response.ok) {
+				throw new Error("Network response was not ok");
+			}
+
+			const data = await response.json();
+			if (data.response && Array.isArray(data.response)) {
+				setMatchStats(prev => ({
+					...prev,
+					[fixtureId]: data.response
+				}));
+			}
+		} catch (err) {
+			console.error("Error fetching match stats:", err);
 		}
 	};
 
@@ -209,11 +249,21 @@ function LeagueMatches() {
 							{new Date(match.fixture.date).toLocaleDateString()}{" "}
 							- {match.fixture.status.long}
 						</div>
-						<Link
-							to={`/predictions?fixture=${match.fixture.id}`}
-							className="text-blue-600 hover:text-blue-800 text-sm">
-							View Predictions
-						</Link>
+						<div className="flex justify-between items-center mt-2">
+							<Link
+								to={`/predictions?fixture=${match.fixture.id}`}
+								className="text-blue-600 hover:text-blue-800 text-sm">
+								{match.fixture.status.short === "FT" ? "View Results" : "View Predictions"}
+							</Link>
+							<PDFDownloadLink
+								document={<MatchPDF match={match} stats={matchStats[match.fixture.id]} />}
+								fileName={`${match.teams.home.name}-vs-${match.teams.away.name}.pdf`}
+								className="text-green-600 hover:text-green-800 text-sm">
+								{({ blob, url, loading, error }) =>
+									loading ? "Generating PDF..." : "Download PDF"
+								}
+							</PDFDownloadLink>
+						</div>
 					</div>
 				))}
 			</div>
