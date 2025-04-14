@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const AIAnalysis = ({ data, type }) => {
 	const [analysis, setAnalysis] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
+	useEffect(() => {
+		// Log environment variable status on component mount
+		console.log('Environment variables:', {
+			hasApiKey: !!process.env.REACT_APP_OPENAI_API_KEY,
+			apiKeyLength: process.env.REACT_APP_OPENAI_API_KEY?.length,
+			apiKeyPrefix: process.env.REACT_APP_OPENAI_API_KEY?.substring(0, 7)
+		});
+	}, []);
+
 	const generateAnalysis = async () => {
 		setLoading(true);
 		setError(null);
 		try {
-			console.log(
-				"API Key status:",
-				!!process.env.REACT_APP_OPENAI_API_KEY
-			);
-			if (!process.env.REACT_APP_OPENAI_API_KEY) {
+			const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+			console.log('API Key status:', {
+				hasApiKey: !!apiKey,
+				apiKeyLength: apiKey?.length,
+				apiKeyPrefix: apiKey?.substring(0, 7)
+			});
+
+			if (!apiKey) {
 				throw new Error(
 					"OpenAI API key is not configured. Please check that your .env file is in the correct location and contains REACT_APP_OPENAI_API_KEY"
 				);
@@ -22,13 +34,13 @@ const AIAnalysis = ({ data, type }) => {
 			let prompt = "";
 			if (type === "player") {
 				const limitedData = {
-					name: data.name,
-					position: data.position,
-					stats: data.stats ? {
-						appearances: data.stats.appearances,
-						goals: data.stats.goals,
-						assists: data.stats.assists,
-						minutesPlayed: data.stats.minutesPlayed
+					name: data.player?.name,
+					position: data.statistics?.[0]?.games?.position,
+					stats: data.statistics?.[0] ? {
+						appearances: data.statistics[0].games.appearences,
+						goals: data.statistics[0].goals.total,
+						assists: data.statistics[0].goals.assists,
+						minutesPlayed: data.statistics[0].games.minutes
 					} : null
 				};
 				
@@ -55,13 +67,15 @@ const AIAnalysis = ({ data, type }) => {
                 5. Historical context`;
 			}
 
+			console.log('Sending request to OpenAI with prompt:', prompt);
+
 			const completion = await fetch(
 				"https://api.openai.com/v1/chat/completions",
 				{
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+						Authorization: `Bearer ${apiKey}`,
 					},
 					body: JSON.stringify({
 						model: "gpt-3.5-turbo",
@@ -81,6 +95,7 @@ const AIAnalysis = ({ data, type }) => {
 
 			if (!completion.ok) {
 				const errorData = await completion.json();
+				console.error('OpenAI API Error:', errorData);
 				throw new Error(
 					errorData.error?.message || "API request failed"
 				);
@@ -89,6 +104,7 @@ const AIAnalysis = ({ data, type }) => {
 			const result = await completion.json();
 			setAnalysis(result.choices[0].message.content);
 		} catch (err) {
+			console.error('Error in generateAnalysis:', err);
 			setError(err.message || "Failed to generate analysis");
 		} finally {
 			setLoading(false);

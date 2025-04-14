@@ -253,7 +253,7 @@ function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topScorers.map((scorer) => (
               <Link
-                to={`/player/${scorer.player.id}`}
+                to={`/player/${scorer.player.id}?league=${selectedLeague}&team=${scorer.statistics[0].team.id}`}
                 key={scorer.player.id}
                 className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
@@ -301,7 +301,7 @@ function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {topAssisters.map((assister) => (
               <Link
-                to={`/player/${assister.player.id}`}
+                to={`/player/${assister.player.id}?league=${selectedLeague}&team=${assister.statistics[0].team.id}`}
                 key={assister.player.id}
                 className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
